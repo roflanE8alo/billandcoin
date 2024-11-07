@@ -14,7 +14,7 @@ public class User {
 
     @Column(name = "password_hash", nullable = false)
     private String passwordHash;
-
+    
     public User() {}
 
     public User(String username, String passwordHash) {
