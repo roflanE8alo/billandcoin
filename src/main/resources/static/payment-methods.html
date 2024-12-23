@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Select Payment Method</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="container">
+    <h1>Select Payment Method</h1>
+
+    <!-- Список методов оплаты -->
+    <section id="payment-methods-section">
+        <h2>Available Payment Methods</h2>
+        <div id="methods-container" style="max-height: 300px; overflow-y: auto; border: 1px solid #ddd; padding: 10px;">
+            <ul id="methods-list"></ul>
+        </div>
+        <h3>Add New Payment Method</h3>
+        <input type="text" id="new-method-name" placeholder="Payment Method Name">
+        <textarea id="new-method-desc" placeholder="Description"></textarea>
+        <button id="add-method-btn">Add Method</button>
+    </section>
+</div>
+
+<script src="payment-methods.js"></script>
+</body>
+</html>

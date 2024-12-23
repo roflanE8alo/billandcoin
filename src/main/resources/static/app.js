@@ -1,60 +1,75 @@
-async function registerUser() {
+const API_BASE_URL = 'http://localhost:8080/api';
+
+// Авторизация
+document.getElementById('login-btn').addEventListener('click', () => {
     const username = document.getElementById('username').value;
     const password = document.getElementById('password').value;
-    const user = { username, passwordHash: password };
 
-    const response = await fetch('/api/users/register', {
+    fetch(`${API_BASE_URL}/users/login`, {
         method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(user),
-    });
-
-    if (response.ok) {
-        alert('User registered successfully');
-        loadUsers();
-    } else {
-        alert('Error registering user');
-    }
-}
-
-async function loginUser() {
-    const username = document.getElementById('username').value;
-    const password = document.getElementById('password').value;
-    const user = { username, passwordHash: password };
-
-    const response = await fetch('/api/users/login', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(user),
-    });
-
-    const message = await response.text();
-    if (message === 'Login successful') {
-        window.location.href = '/success.html';
-    } else {
-        alert(message);
-    }
-}
-
-async function loadUsers() {
-    const response = await fetch('/api/users');
-    const users = await response.json();
-
-    const usersList = document.getElementById('usersList');
-    if (usersList) {
-        usersList.innerHTML = '';
-        users.forEach(user => {
-            const li = document.createElement('li');
-            li.textContent = `ID: ${user.id}, Username: ${user.username}`;
-            usersList.appendChild(li);
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password })
+    })
+        .then(response => response.json())
+        .then(data => {
+            if (data.id) {
+                sessionStorage.setItem('userId', data.id);
+                loadProfile(data.id);
+            } else {
+                document.getElementById('login-status').textContent = 'Invalid login';
+            }
         });
-    }
+});
+
+// Загрузка профиля
+function loadProfile(userId) {
+    document.getElementById('login-section').style.display = 'none';
+    document.getElementById('profile-section').style.display = 'block';
+    document.getElementById('tariffs-section').style.display = 'block';
+    document.getElementById('payments-section').style.display = 'block';
+
+    fetch(`${API_BASE_URL}/user-profile/${userId}`)
+        .then(response => response.json())
+        .then(profile => {
+            document.getElementById('user-info').textContent = `Balance: $${profile.balance}`;
+        });
+
+    loadTariffs();
+    loadPayments(userId);
 }
 
-document.addEventListener('DOMContentLoaded', () => {
-    loadUsers();
+// Загрузка тарифов
+function loadTariffs() {
+    fetch(`${API_BASE_URL}/tariffs`)
+        .then(response => response.json())
+        .then(tariffs => {
+            const list = document.getElementById('tariffs-list');
+            list.innerHTML = '';
+            tariffs.forEach(tariff => {
+                const li = document.createElement('li');
+                li.textContent = `${tariff.name} - $${tariff.price}`;
+                list.appendChild(li);
+            });
+        });
+}
+
+// Загрузка платежей
+function loadPayments(userId) {
+    fetch(`${API_BASE_URL}/payments/history/${userId}`)
+        .then(response => response.json())
+        .then(payments => {
+            const list = document.getElementById('payment-history');
+            list.innerHTML = '';
+            payments.forEach(payment => {
+                const li = document.createElement('li');
+                li.textContent = `Amount: $${payment.amount} - Status: ${payment.status}`;
+                list.appendChild(li);
+            });
+        });
+}
+
+// Выход
+document.getElementById('logout-btn').addEventListener('click', () => {
+    sessionStorage.removeItem('userId');
+    location.reload();
 });

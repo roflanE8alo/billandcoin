@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="container">
+    <h1>Admin Dashboard</h1>
+
+    <!-- Управление пользователями -->
+    <section id="users-section">
+        <h2>Manage Users</h2>
+        <ul id="users-list"></ul>
+        <h3>Edit User</h3>
+        <input type="text" id="edit-username" placeholder="New Username">
+        <select id="edit-role">
+            <option value="USER">User</option>
+            <option value="ADMIN">Admin</option>
+            <option value="SUPPORT">Support</option>
+        </select>
+        <button id="edit-user-btn">Edit User</button>
+        <button id="delete-user-btn">Delete User</button>
+    </section>
+
+    <!-- Список всех пользователей -->
+    <section id="all-users-section">
+        <h2>All Users</h2>
+        <input type="text" id="search-user" placeholder="Search by username" onkeyup="searchUser()">
+        <div id="all-users-container" style="max-height: 300px; overflow-y: auto; border: 1px solid #ddd; padding: 10px;">
+            <ul id="all-users-list"></ul>
+        </div>
+    </section>
+
+    <!-- Мониторинг платежей -->
+    <section id="payments-section">
+        <h2>Payments Monitoring</h2>
+        <ul id="payment-list"></ul>
+    </section>
+
+    <!-- Управление тарифами -->
+    <section id="tariffs-section">
+        <h2>Manage Tariffs</h2>
+        <ul id="tariff-list"></ul>
+        <h3>Add/Edit Tariff</h3>
+        <input type="text" id="tariff-name" placeholder="Name">
+        <input type="number" id="tariff-price" placeholder="Price">
+        <textarea id="tariff-desc" placeholder="Description"></textarea>
+        <button id="add-tariff-btn">Add Tariff</button>
+        <button id="delete-tariff-btn">Delete Tariff</button>
+    </section>
+
+    <!-- Методы оплаты -->
+    <section id="payment-methods-section">
+        <h2>Manage Payment Methods</h2>
+        <h3>View and Edit User Payment Methods</h3>
+        <input type="number" id="user-id" placeholder="User ID">
+        <button id="view-methods-btn">View Methods</button>
+        <ul id="user-methods-list" style="max-height: 200px; overflow-y: auto; border: 1px solid #ddd; padding: 10px;"></ul>
+        <input type="number" id="edit-method-id" placeholder="Payment Method ID">
+        <input type="text" id="edit-method-name" placeholder="New Method Name">
+        <input type="text" id="edit-method-desc" placeholder="New Method Description">
+        <button id="edit-method-btn">Edit Method</button>
+        <button id="delete-method-btn">Delete Method</button>
+    </section>
+
+    <!-- Тикеты поддержки -->
+    <section id="support-section">
+        <h2>Support Tickets</h2>
+        <div id="ticket-container" style="max-height: 200px; overflow-y: auto; border: 1px solid #ddd; padding: 10px;">
+            <ul id="support-list"></ul>
+        </div>
+        <input type="number" id="ticket-id" placeholder="Ticket ID">
+        <button id="view-ticket-btn">View Ticket Response</button>
+        <textarea id="support-response" placeholder="Response" readonly></textarea>
+        <button id="delete-ticket-btn">Delete Ticket</button>
+    </section>
+</div>
+
+<script src="admin.js"></script>
+</body>
+</html>

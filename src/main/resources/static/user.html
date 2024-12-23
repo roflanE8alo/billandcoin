@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Dashboard</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="container">
+    <h1>User Dashboard</h1>
+
+    <!-- Профиль пользователя -->
+    <section id="profile-section">
+        <h2>Profile Information</h2>
+        <div id="profile-info">
+            <p><strong>Username:</strong> <span id="username"></span></p>
+            <p><strong>Balance:</strong> <span id="balance"></span></p>
+            <p><strong>Details:</strong></p>
+            <textarea id="profile-details" placeholder="Update details..."></textarea>
+            <button id="update-profile-btn">Update Profile</button>
+        </div>
+    </section>
+
+    <!-- Раздел тарифов -->
+    <section id="tariffs-section">
+        <h2>Available Tariffs</h2>
+        <div id="tariffs-container">
+            <ul id="tariffs-list"></ul>
+        </div>
+        <h3>Subscribe to Tariff</h3>
+        <input type="number" id="tariff-id" placeholder="Tariff ID">
+        <button id="subscribe-tariff-btn">Subscribe</button>
+    </section>
+
+    <!-- История платежей -->
+    <section id="payments-section">
+        <h2>Payment History</h2>
+        <div id="payments-container">
+            <ul id="payments-list"></ul>
+        </div>
+    </section>
+</div>
+<script src="user.js"></script>
+</body>
+</html>

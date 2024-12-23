@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Support Dashboard</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="container">
+    <h1>Support Dashboard</h1>
+
+    <!-- Список тикетов поддержки -->
+    <section id="support-tickets-section">
+        <h2>Support Tickets</h2>
+        <div id="support-tickets-container" style="max-height: 400px; overflow-y: auto; border: 1px solid #ddd; padding: 10px;">
+            <ul id="support-tickets-list"></ul>
+        </div>
+        <h3>Respond to Ticket</h3>
+        <input type="number" id="ticket-id" placeholder="Ticket ID">
+        <textarea id="ticket-response" placeholder="Write response here..."></textarea>
+        <button id="submit-response-btn">Submit Response</button>
+    </section>
+</div>
+
+<script>
+    // Загрузка всех тикетов с сервера
+    function loadSupportTickets() {
+        fetch('http://localhost:8080/api/support/tickets')
+            .then(response => response.json())
+            .then(tickets => {
+                const list = document.getElementById('support-tickets-list');
+                list.innerHTML = '';
+                tickets.forEach(ticket => {
+                    const li = document.createElement('li');
+                    li.textContent = `ID: ${ticket.id} - Subject: ${ticket.subject} - Message: ${ticket.message}`;
+                    list.appendChild(li);
+                });
+            });
+    }
+
+    // Отправка ответа на тикет
+    document.getElementById('submit-response-btn').addEventListener('click', () => {
+        const ticketId = document.getElementById('ticket-id').value;
+        const response = document.getElementById('ticket-response').value;
+
+        fetch(`http://localhost:8080/api/support/tickets/${ticketId}/respond`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ response: response })
+        })
+        .then(() => {
+            alert('Response submitted successfully');
+            loadSupportTickets();
+        });
+    });
+
+    // Инициализация загрузки тикетов
+    loadSupportTickets();
+</script>
+</body>
+</html>
