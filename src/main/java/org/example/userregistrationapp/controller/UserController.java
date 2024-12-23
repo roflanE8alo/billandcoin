@@ -7,13 +7,12 @@ import org.example.userregistrationapp.repository.RoleRepository;
 import org.example.userregistrationapp.repository.UserRepository;
 import org.example.userregistrationapp.repository.UserProfileRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
-import java.util.HashSet;
-import java.util.Optional;
-import java.util.Set;
-import java.util.Collections;
+import java.util.*;
 
 @RestController
 @RequestMapping("/api/users")
@@ -47,6 +46,50 @@ public class UserController {
         return savedUser;
     }
 
+    @PostMapping("/login")
+    public ResponseEntity<?> loginUser(@RequestBody Map<String, String> loginData) {
+        // Получаем данные из запроса
+        String username = loginData.get("username");
+        String passwordHash = loginData.get("passwordHash");
+
+        // Поиск пользователя в базе данных
+        Optional<User> userOpt = userRepository.findByUsername(username);
+
+        if (userOpt.isPresent()) {
+            User user = userOpt.get();
+
+            // Проверка пароля
+            if (user.getPasswordHash().equals(passwordHash)) {
+
+                // Получаем роль пользователя
+                String role = user.getRoles().iterator().next().getName(); // Предполагаем одну роль
+
+                // Возвращаем роль
+                Map<String, String> response = new HashMap<>();
+                response.put("role", role);
+
+                return ResponseEntity.ok(response);
+            } else {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid password");
+            }
+        } else {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("User not found");
+        }
+    }
+
+    /*@GetMapping("/current/{userId}")
+    public ResponseEntity<?> getCurrentUser(@PathVariable Long userId) {
+        Optional<User> userOpt = userRepository.findById(userId);
+        if (userOpt.isPresent()) {
+            User user = userOpt.get();
+            Map<String, Object> response = new HashMap<>();
+            response.put("id", user.getId());
+            response.put("username", user.getUsername());
+            response.put("roles", user.getRoles());
+            return ResponseEntity.ok(response);
+        }
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+    }*/
 
     @PostMapping("/assign-role/{userId}/{roleName}")
     public String assignRole(@PathVariable Long userId, @PathVariable String roleName) {
