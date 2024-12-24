@@ -48,11 +48,19 @@ document.addEventListener('DOMContentLoaded', () => {
         loadProfile(); // Перезагрузка профиля
     });
 
+    function addPaymentToHistory(payment) {
+        const list = document.getElementById('payments-list');
+
+        const li = document.createElement('li');
+        li.textContent = `ID: ${payment.id} - Amount: $${payment.amount.toFixed(2)} - Status: ${payment.status}`;
+        list.prepend(li); // Добавляем новый элемент в начало списка
+    }
+
     // Пополнение баланса
     document.getElementById('top-up-btn').addEventListener('click', async () => {
-        const userId = parseInt(sessionStorage.getItem('userId')); // Преобразуем userId в число
-        const amount = parseFloat(document.getElementById('top-up-amount').value); // Преобразуем amount в число
-        const methodId = parseInt(document.getElementById('payment-method').value); // Преобразуем methodId в число
+        const userId = parseInt(sessionStorage.getItem('userId')); // Преобразуем в число
+        const amount = parseFloat(document.getElementById('top-up-amount').value);
+        const methodId = parseInt(document.getElementById('payment-method').value);
 
         if (isNaN(userId) || isNaN(amount) || amount <= 0 || isNaN(methodId)) {
             alert('Enter valid data!');
@@ -63,18 +71,24 @@ document.addEventListener('DOMContentLoaded', () => {
             const response = await fetch('/api/user-profile/top-up', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ userId, methodId, amount }) // Все данные теперь числа
+                body: JSON.stringify({ userId, methodId, amount })
             });
 
-            const result = await response.text();
-            alert(result);
+            if (!response.ok) {
+                throw new Error('Failed to top up balance!');
+            }
+
+            alert('Balance topped up successfully');
+
+            // Динамическое обновление профиля и истории платежей
             loadProfile(); // Обновляем профиль
+            const payment = await response.json(); // Получаем данные о платеже из ответа
+            addPaymentToHistory(payment); // Добавляем новый платеж в список
         } catch (error) {
             console.error('Top-up error:', error);
             alert('Failed to top up balance!');
         }
     });
-
 
     // Загрузка тарифов
     function loadTariffs() {
@@ -122,19 +136,29 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Загрузка истории платежей
     function loadPayments() {
-        console.log('Loading payments...');
-        const payments = [
-            { id: 1, amount: 100.00, status: 'completed' },
-            { id: 2, amount: 50.00, status: 'completed' },
-            { id: 3, amount: 50.00, status: 'completed' }
-        ];
-        const list = document.getElementById('payments-list');
-        list.innerHTML = '';
-        payments.forEach(payment => {
-            const li = document.createElement('li');
-            li.textContent = `ID: ${payment.id} - Amount: $${payment.amount} - Status: ${payment.status}`;
-            list.appendChild(li);
-        });
+        const userId = sessionStorage.getItem('userId'); // Получаем ID пользователя из сессии
+
+        fetch(`/api/payments/history/${userId}`) // Запрос к API для получения истории платежей
+            .then(response => response.json())
+            .then(payments => {
+                const list = document.getElementById('payments-list');
+                list.innerHTML = ''; // Очищаем старый список
+
+                if (payments.length === 0) {
+                    list.innerHTML = '<li>No payments found</li>'; // Если история пуста
+                    return;
+                }
+
+                payments.forEach(payment => {
+                    const li = document.createElement('li');
+                    li.textContent = `ID: ${payment.id} - Amount: $${payment.amount.toFixed(2)} - Status: ${payment.status}`;
+                    list.appendChild(li);
+                });
+            })
+            .catch(error => {
+                console.error('Error loading payments:', error);
+                alert('Failed to load payment history!');
+            });
     }
 
     // Инициализация

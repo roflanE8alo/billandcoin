@@ -37,15 +37,10 @@ public class UserProfileController {
     @PostMapping("/top-up")
     public ResponseEntity<?> topUpBalance(@RequestBody Map<String, Object> requestData) {
         try {
-            // Логирование данных
-            System.out.println("Request received: " + requestData);
-
-            // Преобразование данных
             Long userId = Long.parseLong(requestData.get("userId").toString());
             Long methodId = Long.parseLong(requestData.get("methodId").toString());
             BigDecimal amount = new BigDecimal(requestData.get("amount").toString());
 
-            // Валидация
             if (amount.compareTo(BigDecimal.ZERO) <= 0) {
                 return ResponseEntity.badRequest().body("Amount must be greater than zero");
             }
@@ -60,22 +55,18 @@ public class UserProfileController {
                     userProfileRepository.save(profile);
                 }
 
-                // Обновляем баланс
                 profile.setBalance(profile.getBalance().add(amount));
                 profile.setUpdatedAt(LocalDateTime.now());
                 userProfileRepository.save(profile);
 
-                // Записываем платеж
                 Payment payment = new Payment(userOpt.get(), methodOpt.get(), amount, "completed");
                 paymentRepository.save(payment);
 
-                return ResponseEntity.ok("Balance topped up successfully");
+                // Возвращаем новый платеж в ответе
+                return ResponseEntity.ok(payment);
             }
 
             return ResponseEntity.badRequest().body("User or Payment Method not found");
-
-        } catch (NumberFormatException e) {
-            return ResponseEntity.badRequest().body("Invalid data format: " + e.getMessage());
         } catch (Exception e) {
             e.printStackTrace();
             return ResponseEntity.status(500).body("Internal Server Error: " + e.getMessage());
