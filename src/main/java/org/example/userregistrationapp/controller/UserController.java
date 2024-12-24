@@ -64,8 +64,9 @@ public class UserController {
             if (PasswordUtil.checkPassword(password, user.getPasswordHash())) {
                 String role = user.getRoles().iterator().next().getName(); // Получаем роль
 
-                Map<String, String> response = new HashMap<>();
-                response.put("role", role);
+                Map<String, Object> response = new HashMap<>(); // Заменяем String на Object
+                response.put("id", user.getId()); // Теперь можно добавить Long
+                response.put("role", role);      // Строка также добавляется
 
                 return ResponseEntity.ok(response);
             } else {
@@ -90,13 +91,23 @@ public class UserController {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
     }*/
 
-    @GetMapping("/current")
+    /*@GetMapping("/current")
     public ResponseEntity<?> getCurrentUser() {
         // Возвращаем фиктивного пользователя для демонстрации
         Map<String, Object> user = new HashMap<>();
         user.put("id", 1); // Фиксированный ID
         user.put("username", "demo_user");
         return ResponseEntity.ok(user);
+    }*/
+
+    @GetMapping("/current/{username}")
+    public ResponseEntity<?> getCurrentUser(@PathVariable String username) {
+        Optional<User> userOpt = userRepository.findByUsername(username);
+        if (userOpt.isPresent()) {
+            User user = userOpt.get();
+            return ResponseEntity.ok(Map.of("id", user.getId(), "username", user.getUsername()));
+        }
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
     }
 
     @PostMapping("/assign-role/{userId}/{roleName}")

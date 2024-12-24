@@ -1,19 +1,21 @@
 document.addEventListener('DOMContentLoaded', () => {
-    let userId = 1; // Фиксированный ID пользователя для демонстрации
+    const userId = sessionStorage.getItem('userId'); // Получаем сохраненный ID пользователя
 
-    // Загрузка профиля пользователя
-    function loadProfile() {
-        console.log('Loading profile...');
-        const profile = {
-            user: { username: 'demo_user' },
-            balance: 100.00,
-            details: 'Demo profile details'
-        };
-        console.log('Profile data:', profile);
-        document.getElementById('username').textContent = profile.user.username;
-        document.getElementById('balance').textContent = `$${profile.balance.toFixed(2)}`;
-        document.getElementById('profile-details').value = profile.details;
+    if (!userId) {
+        alert('User not logged in!');
+        window.location.href = 'auth.html';
+        return;
     }
+
+    // Загрузка профиля
+    fetch(`/api/user-profile/${userId}`)
+        .then(response => response.json())
+        .then(profile => {
+            document.getElementById('username').textContent = profile.user.username;
+            document.getElementById('balance').textContent = `$${profile.balance.toFixed(2)}`;
+            document.getElementById('profile-details').value = profile.details;
+        })
+        .catch(error => console.error('Error loading profile:', error));
 
     // Обновление профиля пользователя
     document.getElementById('update-profile-btn').addEventListener('click', () => {

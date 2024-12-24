@@ -62,6 +62,8 @@ document.addEventListener("DOMContentLoaded", () => {
             }
 
             const data = await response.json();
+            sessionStorage.setItem('userId', data.id); // Сохраняем ID пользователя
+            sessionStorage.setItem('role', data.role); // Сохраняем роль пользователя
             showNotification("Login successful!", "success");
             redirectToRolePage(data.role);
         } catch (error) {
