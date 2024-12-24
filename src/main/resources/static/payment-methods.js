@@ -1,66 +1,40 @@
-let userId;
-let selectedTariffId = sessionStorage.getItem('selectedTariffId'); // Тариф сохранен из предыдущей страницы
+document.addEventListener('DOMContentLoaded', () => {
+    let userId = 1; // Фиксированный ID пользователя для демонстрации
 
-// Получение текущего пользователя
-function fetchCurrentUser() {
-    fetch('http://localhost:8080/api/users/current')
-        .then(response => response.json())
-        .then(user => {
-            userId = user.id;
-            loadPaymentMethods();
-        })
-        .catch(() => {
-            alert('Authentication required!');
-            window.location.href = 'login.html';
+    // Загрузка фиктивных методов оплаты
+    function loadPaymentMethods() {
+        console.log('Loading payment methods for user ID:', userId);
+        const methods = [
+            { id: 2, name: 'Visa', description: 'Credit Card' },
+            { id: 3, name: 'Mir', description: 'Credit Card' } // Исправлена ошибка с кавычками
+        ];
+
+        const list = document.getElementById('methods-list');
+        list.innerHTML = '';
+        methods.forEach(method => {
+            const li = document.createElement('li');
+            li.textContent = `ID: ${method.id} - ${method.name} (${method.description})`;
+            li.addEventListener('click', () => selectPaymentMethod(method.id));
+            list.appendChild(li);
         });
-}
+    }
 
-// Загрузка методов оплаты
-function loadPaymentMethods() {
-    fetch(`http://localhost:8080/api/user-payment-methods/${userId}`)
-        .then(response => response.json())
-        .then(methods => {
-            const list = document.getElementById('methods-list');
-            list.innerHTML = '';
-            methods.forEach(method => {
-                const li = document.createElement('li');
-                li.textContent = `ID: ${method.id} - ${method.name}`;
-                li.addEventListener('click', () => selectPaymentMethod(method.id));
-                list.appendChild(li);
-            });
-        });
-}
+    // Добавление нового метода оплаты (фиктивная реализация)
+    document.getElementById('add-method-btn').addEventListener('click', () => {
+        const methodName = document.getElementById('new-method-name').value;
+        const methodDesc = document.getElementById('new-method-desc').value;
 
-// Добавление нового метода оплаты
-document.getElementById('add-method-btn').addEventListener('click', () => {
-    const methodName = document.getElementById('new-method-name').value;
-    const methodDesc = document.getElementById('new-method-desc').value;
+        console.log('New method added:', methodName, methodDesc);
+        alert(`Payment method '${methodName}' added successfully`);
+        loadPaymentMethods(); // Перезагрузка списка
+    });
 
-    fetch('http://localhost:8080/api/payment-methods', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: methodName, description: methodDesc })
-    })
-        .then(() => loadPaymentMethods())
-        .then(() => alert('Payment method added successfully'));
+    // Выбор метода оплаты для подписки
+    function selectPaymentMethod(methodId) {
+        alert(`Payment method ${methodId} selected!`);
+        window.location.href = 'user.html';
+    }
+
+    // Инициализация
+    loadPaymentMethods();
 });
-
-// Выбор метода оплаты и завершение подписки
-function selectPaymentMethod(methodId) {
-    fetch(`http://localhost:8080/api/payments`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-            userId: userId,
-            methodId: methodId,
-            amount: 0, // Подписка может быть оплачена сразу
-            status: 'pending'
-        })
-    })
-        .then(() => {
-            alert('Subscription completed successfully!');
-            window.location.href = 'index.html';
-        });
-}
-
-fetchCurrentUser();

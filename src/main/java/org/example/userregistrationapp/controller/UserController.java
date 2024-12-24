@@ -10,6 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.example.userregistrationapp.util.PasswordUtil;
 
 import java.math.BigDecimal;
 import java.util.*;
@@ -29,6 +30,9 @@ public class UserController {
 
     @PostMapping(value = "/register", consumes = { "application/json", "application/json;charset=UTF-8" })
     public User registerUser(@RequestBody User user) {
+        // Хешируем пароль перед сохранением
+        user.setPasswordHash(PasswordUtil.hashPassword(user.getPasswordHash()));
+
         if (user.getRoles() == null || user.getRoles().isEmpty()) {
             Role defaultRole = roleRepository.findByName("USER");
             Set<Role> roles = new HashSet<>();
@@ -36,10 +40,10 @@ public class UserController {
             user.setRoles(roles);
         }
 
-        // Сохранение пользователя
+        // Сохраняем пользователя
         User savedUser = userRepository.save(user);
 
-        // Создание профиля пользователя с балансом по умолчанию
+        // Создаем профиль
         UserProfile userProfile = new UserProfile(savedUser, BigDecimal.ZERO, "Default profile");
         userProfileRepository.save(userProfile);
 
@@ -48,23 +52,18 @@ public class UserController {
 
     @PostMapping("/login")
     public ResponseEntity<?> loginUser(@RequestBody Map<String, String> loginData) {
-        // Получаем данные из запроса
         String username = loginData.get("username");
-        String passwordHash = loginData.get("passwordHash");
+        String password = loginData.get("passwordHash"); // Обычный пароль, не хешированный
 
-        // Поиск пользователя в базе данных
         Optional<User> userOpt = userRepository.findByUsername(username);
 
         if (userOpt.isPresent()) {
             User user = userOpt.get();
 
-            // Проверка пароля
-            if (user.getPasswordHash().equals(passwordHash)) {
+            // Проверяем пароль с помощью утилиты
+            if (PasswordUtil.checkPassword(password, user.getPasswordHash())) {
+                String role = user.getRoles().iterator().next().getName(); // Получаем роль
 
-                // Получаем роль пользователя
-                String role = user.getRoles().iterator().next().getName(); // Предполагаем одну роль
-
-                // Возвращаем роль
                 Map<String, String> response = new HashMap<>();
                 response.put("role", role);
 
@@ -90,6 +89,15 @@ public class UserController {
         }
         return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
     }*/
+
+    @GetMapping("/current")
+    public ResponseEntity<?> getCurrentUser() {
+        // Возвращаем фиктивного пользователя для демонстрации
+        Map<String, Object> user = new HashMap<>();
+        user.put("id", 1); // Фиксированный ID
+        user.put("username", "demo_user");
+        return ResponseEntity.ok(user);
+    }
 
     @PostMapping("/assign-role/{userId}/{roleName}")
     public String assignRole(@PathVariable Long userId, @PathVariable String roleName) {
@@ -121,6 +129,17 @@ public class UserController {
             return userOpt.get().getRoles(); // Возвращаем роли пользователя
         } else {
             return Collections.emptySet(); // Возвращаем пустой список, если пользователь не найден
+        }
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<?> deleteUser(@PathVariable Long id) {
+        // Проверяем, существует ли пользователь
+        if (userRepository.existsById(id)) {
+            userRepository.deleteById(id); // Удаляем пользователя
+            return ResponseEntity.ok("User deleted successfully");
+        } else {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("User not found");
         }
     }
 }
