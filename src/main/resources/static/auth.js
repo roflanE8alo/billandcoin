@@ -18,6 +18,22 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     }
 
+    function showNotification(message, type = "info") {
+        const container = document.getElementById("notification-container");
+
+        const notification = document.createElement("div");
+        notification.classList.add("notification", type);
+        notification.textContent = message;
+
+        container.appendChild(notification);
+
+        // Автоматически скрыть уведомление через 3 секунды
+        setTimeout(() => {
+            notification.classList.add("fade-out");
+            setTimeout(() => container.removeChild(notification), 500);
+        }, 3000);
+    }
+
     // Логин
     document.getElementById("login-btn").addEventListener("click", async () => {
         const email = document.getElementById("login-email").value;
@@ -42,12 +58,12 @@ document.addEventListener("DOMContentLoaded", () => {
             });
 
             if (!response.ok) {
-                throw new Error("Invalid email or password.");
+                throw new showNotification("Invalid email or password.", "error");
             }
 
             const data = await response.json();
-            alert("Login successful!");
-            redirectToRolePage(data.role); // Перенаправление в зависимости от роли
+            showNotification("Login successful!", "success");
+            redirectToRolePage(data.role);
         } catch (error) {
             errorField.textContent = error.message;
         }
@@ -80,8 +96,8 @@ document.addEventListener("DOMContentLoaded", () => {
                 throw new Error("Registration failed.");
             }
 
-            alert("Registration successful! Redirecting to profile page...");
-            window.location.href = 'user.html'; // Перенаправление на страницу профиля
+            showNotification("Registration successful! Redirecting to profile page...", "success");
+            window.location.href = 'user.html';
         } catch (error) {
             errorField.textContent = error.message;
         }
