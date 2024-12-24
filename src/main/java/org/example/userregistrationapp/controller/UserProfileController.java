@@ -3,9 +3,11 @@ package org.example.userregistrationapp.controller;
 import org.example.userregistrationapp.model.*;
 import org.example.userregistrationapp.repository.*;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
+import java.util.Map;
 import java.util.Optional;
 import java.time.LocalDateTime;
 
@@ -33,30 +35,51 @@ public class UserProfileController {
 
     // Пополнение баланса
     @PostMapping("/top-up")
-    public String topUpBalance(@RequestBody Payment payment) {
-        Optional<User> userOpt = userRepository.findById(payment.getUser().getId());
-        Optional<PaymentMethod> methodOpt = paymentMethodRepository.findById(payment.getPaymentMethod().getId());
+    public ResponseEntity<?> topUpBalance(@RequestBody Map<String, Object> requestData) {
+        try {
+            // Логирование данных
+            System.out.println("Request received: " + requestData);
 
-        if (userOpt.isPresent() && methodOpt.isPresent()) {
-            UserProfile profile = userProfileRepository.findByUserId(payment.getUser().getId());
+            // Преобразование данных
+            Long userId = Long.parseLong(requestData.get("userId").toString());
+            Long methodId = Long.parseLong(requestData.get("methodId").toString());
+            BigDecimal amount = new BigDecimal(requestData.get("amount").toString());
 
-            if (profile == null) { // Если профиль отсутствует, создаем его
-                profile = new UserProfile(userOpt.get(), BigDecimal.ZERO, "Auto-created profile");
+            // Валидация
+            if (amount.compareTo(BigDecimal.ZERO) <= 0) {
+                return ResponseEntity.badRequest().body("Amount must be greater than zero");
+            }
+
+            Optional<User> userOpt = userRepository.findById(userId);
+            Optional<PaymentMethod> methodOpt = paymentMethodRepository.findById(methodId);
+
+            if (userOpt.isPresent() && methodOpt.isPresent()) {
+                UserProfile profile = userProfileRepository.findByUserId(userId);
+                if (profile == null) {
+                    profile = new UserProfile(userOpt.get(), BigDecimal.ZERO, "Auto-created profile");
+                    userProfileRepository.save(profile);
+                }
+
+                // Обновляем баланс
+                profile.setBalance(profile.getBalance().add(amount));
+                profile.setUpdatedAt(LocalDateTime.now());
                 userProfileRepository.save(profile);
+
+                // Записываем платеж
+                Payment payment = new Payment(userOpt.get(), methodOpt.get(), amount, "completed");
+                paymentRepository.save(payment);
+
+                return ResponseEntity.ok("Balance topped up successfully");
             }
 
-            profile.setBalance(profile.getBalance().add(payment.getAmount()));
-            profile.setUpdatedAt(LocalDateTime.now());
-            userProfileRepository.save(profile);
+            return ResponseEntity.badRequest().body("User or Payment Method not found");
 
-            if (payment.getStatus() == null) {
-                payment.setStatus("completed");
-            }
-
-            paymentRepository.save(payment);
-            return "Balance topped up successfully";
+        } catch (NumberFormatException e) {
+            return ResponseEntity.badRequest().body("Invalid data format: " + e.getMessage());
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(500).body("Internal Server Error: " + e.getMessage());
         }
-        return "User or Payment Method not found";
     }
 
     // Обновление личной информации

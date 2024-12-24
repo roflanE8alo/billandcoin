@@ -17,6 +17,29 @@ document.addEventListener('DOMContentLoaded', () => {
         })
         .catch(error => console.error('Error loading profile:', error));
 
+    function loadProfile() {
+        const userId = sessionStorage.getItem('userId'); // Получаем ID пользователя из сессии
+
+        if (!userId) {
+            alert('User not logged in!');
+            window.location.href = 'auth.html'; // Перенаправляем на страницу входа
+            return;
+        }
+
+        fetch(`/api/user-profile/${userId}`) // Запрашиваем данные профиля с сервера
+            .then(response => response.json())
+            .then(profile => {
+                // Обновляем интерфейс с данными профиля
+                document.getElementById('username').textContent = profile.user.username;
+                document.getElementById('balance').textContent = `$${profile.balance.toFixed(2)}`;
+                document.getElementById('profile-details').value = profile.details;
+            })
+            .catch(error => {
+                console.error('Error loading profile:', error);
+                alert('Failed to load profile');
+            });
+    }
+
     // Обновление профиля пользователя
     document.getElementById('update-profile-btn').addEventListener('click', () => {
         const updatedDetails = document.getElementById('profile-details').value;
@@ -26,18 +49,32 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // Пополнение баланса
-    document.getElementById('top-up-btn').addEventListener('click', () => {
-        const amount = parseFloat(document.getElementById('top-up-amount').value);
-        const methodId = parseInt(document.getElementById('payment-method').value);
+    document.getElementById('top-up-btn').addEventListener('click', async () => {
+        const userId = parseInt(sessionStorage.getItem('userId')); // Преобразуем userId в число
+        const amount = parseFloat(document.getElementById('top-up-amount').value); // Преобразуем amount в число
+        const methodId = parseInt(document.getElementById('payment-method').value); // Преобразуем methodId в число
 
-        console.log('Top-up initiated. Amount:', amount, 'Method ID:', methodId);
-        if (isNaN(amount) || amount <= 0) {
-            alert('Enter a valid amount!');
+        if (isNaN(userId) || isNaN(amount) || amount <= 0 || isNaN(methodId)) {
+            alert('Enter valid data!');
             return;
         }
-        alert('Balance topped up successfully');
-        loadProfile();
+
+        try {
+            const response = await fetch('/api/user-profile/top-up', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ userId, methodId, amount }) // Все данные теперь числа
+            });
+
+            const result = await response.text();
+            alert(result);
+            loadProfile(); // Обновляем профиль
+        } catch (error) {
+            console.error('Top-up error:', error);
+            alert('Failed to top up balance!');
+        }
     });
+
 
     // Загрузка тарифов
     function loadTariffs() {
@@ -65,19 +102,22 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Загрузка методов оплаты
     function loadPaymentMethods() {
-        console.log('Loading payment methods...');
-        const methods = [
-            { id: 1, name: 'Visa' },
-            { id: 2, name: 'Mir' }
-        ];
-        const select = document.getElementById('payment-method');
-        select.innerHTML = '';
-        methods.forEach(method => {
-            const option = document.createElement('option');
-            option.value = method.id;
-            option.textContent = method.name;
-            select.appendChild(option);
-        });
+        fetch('/api/payment-methods') // Новый эндпоинт на сервере
+            .then(response => response.json())
+            .then(methods => {
+                const select = document.getElementById('payment-method');
+                select.innerHTML = ''; // Очистка старых данных
+                methods.forEach(method => {
+                    const option = document.createElement('option');
+                    option.value = method.id;
+                    option.textContent = method.name;
+                    select.appendChild(option);
+                });
+            })
+            .catch(error => {
+                console.error('Error loading payment methods:', error);
+                alert('Failed to load payment methods!');
+            });
     }
 
     // Загрузка истории платежей
