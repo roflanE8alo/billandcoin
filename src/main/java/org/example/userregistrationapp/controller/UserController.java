@@ -29,10 +29,20 @@ public class UserController {
     private RoleRepository roleRepository;
 
     @PostMapping(value = "/register", consumes = { "application/json", "application/json;charset=UTF-8" })
-    public User registerUser(@RequestBody User user) {
+    public ResponseEntity<?> registerUser(@RequestBody User user) {
+        // Валидация имени пользователя
+        String username = user.getUsername();
+        if (username.length() < 15 || username.length() > 39) {
+            return ResponseEntity.badRequest().body("Username must be between 6 and 30 characters.");
+        }
+        if (!username.endsWith("@gmail.com")) {
+            return ResponseEntity.badRequest().body("Username must end with '@gmail.com'.");
+        }
+
         // Хешируем пароль перед сохранением
         user.setPasswordHash(PasswordUtil.hashPassword(user.getPasswordHash()));
 
+        // Присвоение роли по умолчанию
         if (user.getRoles() == null || user.getRoles().isEmpty()) {
             Role defaultRole = roleRepository.findByName("USER");
             Set<Role> roles = new HashSet<>();
@@ -40,14 +50,14 @@ public class UserController {
             user.setRoles(roles);
         }
 
-        // Сохраняем пользователя
+        // Сохранение пользователя
         User savedUser = userRepository.save(user);
 
-        // Создаем профиль
+        // Создание профиля пользователя
         UserProfile userProfile = new UserProfile(savedUser, BigDecimal.ZERO, "Default profile");
         userProfileRepository.save(userProfile);
 
-        return savedUser;
+        return ResponseEntity.ok(savedUser);
     }
 
     @PostMapping("/login")

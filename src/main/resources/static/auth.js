@@ -41,7 +41,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const errorField = document.getElementById("login-error");
 
         if (!email || !password) {
-            errorField.textContent = "Please fill out all fields.";
+            showNotification("Please fill out all fields.", "error");
             return;
         }
 
@@ -78,7 +78,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const errorField = document.getElementById("register-error");
 
         if (!email || !password) {
-            errorField.textContent = "Please fill out all fields.";
+            showNotification("Please fill out all fields.", "error");
             return;
         }
 
@@ -95,11 +95,10 @@ document.addEventListener("DOMContentLoaded", () => {
             });
 
             if (!response.ok) {
-                throw new Error("Registration failed.");
+                throw new showNotification("Registration failed.", "error");
             }
 
-            showNotification("Registration successful! Redirecting to profile page...", "success");
-            window.location.href = 'user.html';
+            showNotification("Registration successful!", "success");
         } catch (error) {
             errorField.textContent = error.message;
         }

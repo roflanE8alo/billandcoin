@@ -4,26 +4,28 @@ body {
     padding: 0;
     box-sizing: border-box;
     background-color: #f9f9f9;
+    display: flex;
+    align-items: center; /* Центрирование по вертикали */
+    justify-content: center; /* Центрирование по горизонтали */
+    height: 100vh; /* Высота равна высоте окна браузера */
 }
 
 .container {
-    max-width: 1200px;
-    margin: 20px auto;
+    width: 100%; /* Делаем контейнер адаптивным */
+    max-width: 400px; /* Ограничиваем максимальную ширину */
+    margin: 0 auto; /* Центрируем по горизонтали */
     padding: 20px;
     background: white;
     border-radius: 8px;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-}
-
-h1, h2, h3 {
-    text-align: center;
+    box-sizing: border-box; /* Учитываем padding в размерах */
 }
 
 input, button, textarea, select {
-    display: block;
-    width: 100%;
+    width: 100%; /* Занимают всю ширину контейнера */
     margin: 10px 0;
     padding: 10px;
+    box-sizing: border-box; /* Учитываем padding */
 }
 
 button {
@@ -31,20 +33,11 @@ button {
     color: white;
     border: none;
     cursor: pointer;
+    border-radius: 4px; /* Добавляем скругленные углы */
 }
 
 button:hover {
     background-color: #0056b3;
-}
-
-ul {
-    list-style-type: none;
-    padding: 0;
-}
-
-ul li {
-    padding: 10px;
-    border-bottom: 1px solid #ddd;
 }
 
 .notification-container {
@@ -79,4 +72,26 @@ ul li {
 
 .notification.fade-out {
     opacity: 0;
+}
+
+#payments-container {
+    max-height: 300px; /* Ограничиваем высоту контейнера */
+    overflow-y: auto;  /* Добавляем вертикальную прокрутку */
+    border: 1px solid #ddd; /* Граница для наглядности */
+    padding: 10px; /* Добавляем отступы */
+    margin-top: 10px; /* Отступ сверху */
+    border-radius: 4px; /* Скругляем углы */
+    max-height: 5vh; /* Ограничиваем высоту контейнера видимой области */
+}
+
+#profile-details {
+    display: inline-block; /* Устанавливаем inline-блок */
+    width: 200px; /* Ширина под номер телефона */
+    height: 30px; /* Высота для одной строки */
+    overflow: hidden; /* Убираем лишний текст */
+    white-space: nowrap; /* Запрещаем перенос строки */
+    text-overflow: ellipsis; /* Добавляем троеточие для переполненного текста */
+    padding: 5px; /* Внутренний отступ */
+    border: 1px solid #ccc; /* Добавляем границу */
+    border-radius: 4px; /* Скругляем углы */
 }

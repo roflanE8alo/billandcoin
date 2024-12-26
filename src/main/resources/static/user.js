@@ -1,6 +1,22 @@
 document.addEventListener('DOMContentLoaded', () => {
     const userId = sessionStorage.getItem('userId'); // Получаем сохраненный ID пользователя
 
+    function showNotification(message, type = "info") {
+        const container = document.getElementById("notification-container");
+
+        const notification = document.createElement("div");
+        notification.classList.add("notification", type);
+        notification.textContent = message;
+
+        container.appendChild(notification);
+
+        // Автоматически скрыть уведомление через 3 секунды
+        setTimeout(() => {
+            notification.classList.add("fade-out");
+            setTimeout(() => container.removeChild(notification), 500);
+        }, 3000);
+    }
+
     if (!userId) {
         alert('User not logged in!');
         window.location.href = 'auth.html';
@@ -63,7 +79,11 @@ document.addEventListener('DOMContentLoaded', () => {
         const methodId = parseInt(document.getElementById('payment-method').value);
 
         if (isNaN(userId) || isNaN(amount) || amount <= 0 || isNaN(methodId)) {
-            alert('Enter valid data!');
+            showNotification("Enter valid data!", "error");
+            return;
+        }
+        if (amount < 0.01) {
+            showNotification("Min top-up 1 cent!", "error");
             return;
         }
 
@@ -88,6 +108,11 @@ document.addEventListener('DOMContentLoaded', () => {
             console.error('Top-up error:', error);
             alert('Failed to top up balance!');
         }
+    });
+
+    // Redirect to Add Payment Methods Page
+    document.getElementById('add-payment-method-btn').addEventListener('click', () => {
+        window.location.href = 'payment-methods.html'; // Update with the actual path to the "Add Payment Methods" page
     });
 
     // Загрузка тарифов

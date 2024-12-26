@@ -1,22 +1,31 @@
 document.addEventListener('DOMContentLoaded', () => {
     let userId = 1; // Фиксированный ID пользователя для демонстрации
 
-    // Загрузка фиктивных методов оплаты
+    // Загрузка методов оплаты
     function loadPaymentMethods() {
-        console.log('Loading payment methods for user ID:', userId);
-        const methods = [
-            { id: 2, name: 'Visa', description: 'Credit Card' },
-            { id: 3, name: 'Mir', description: 'Credit Card' } // Исправлена ошибка с кавычками
-        ];
+        const userId = sessionStorage.getItem('userId'); // ID пользователя
 
-        const list = document.getElementById('methods-list');
-        list.innerHTML = '';
-        methods.forEach(method => {
-            const li = document.createElement('li');
-            li.textContent = `ID: ${method.id} - ${method.name} (${method.description})`;
-            li.addEventListener('click', () => selectPaymentMethod(method.id));
-            list.appendChild(li);
-        });
+        fetch(`/api/payment-methods/user/${userId}`)
+            .then(response => response.json())
+            .then(methods => {
+                const list = document.getElementById('methods-list');
+                list.innerHTML = ''; // Очистка списка
+
+                if (methods.length === 0) {
+                    list.innerHTML = '<li>No payment methods available</li>';
+                    return;
+                }
+
+                methods.forEach(method => {
+                    const li = document.createElement('li');
+                    li.textContent = `${method.name} - ${method.description}`;
+                    list.appendChild(li);
+                });
+            })
+            .catch(error => {
+                console.error('Error loading payment methods:', error);
+                alert('Failed to load payment methods!');
+            });
     }
 
     // Добавление нового метода оплаты (фиктивная реализация)

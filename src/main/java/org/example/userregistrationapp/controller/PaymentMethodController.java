@@ -5,6 +5,7 @@ import org.example.userregistrationapp.repository.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+
 import java.util.List;
 
 @RestController
@@ -13,6 +14,9 @@ public class PaymentMethodController {
 
     @Autowired
     private PaymentMethodRepository paymentMethodRepository;
+
+    @Autowired
+    private UserPaymentMethodRepository userPaymentMethodRepository;
 
     @PostMapping
     public PaymentMethod addPaymentMethod(@RequestBody PaymentMethod method) {
@@ -31,5 +35,13 @@ public class PaymentMethodController {
             return "Payment method deleted successfully";
         }
         return "Payment method not found";
+    }
+
+    @GetMapping("/user/{userId}")
+    public List<PaymentMethod> getUserPaymentMethods(@PathVariable Long userId) {
+        List<UserPaymentMethod> userMethods = userPaymentMethodRepository.findByUserId(userId);
+        return userMethods.stream()
+                .map(UserPaymentMethod::getPaymentMethod) // Преобразование к списку методов
+                .toList();
     }
 }
