@@ -57,11 +57,41 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Обновление профиля пользователя
-    document.getElementById('update-profile-btn').addEventListener('click', () => {
+    /*document.getElementById('update-profile-btn').addEventListener('click', () => {
         const updatedDetails = document.getElementById('profile-details').value;
         console.log('Updated details:', updatedDetails);
         alert('Profile updated successfully');
         loadProfile(); // Перезагрузка профиля
+    });*/
+
+    // Обновление деталей профиля пользователя
+    document.getElementById('edit-profile-btn').addEventListener('click', () => {
+        const updatedDetails = document.getElementById('profile-details').value;
+
+        // Регулярное выражение для проверки формата телефона: +7 *** *** ** **
+        const phoneRegex = /^\+7 \d{3} \d{3} \d{2} \d{2}$/;
+
+        // Проверяем соответствие ввода формату
+        if (!phoneRegex.test(updatedDetails)) {
+            showNotification("Please enter a valid phone number in the format: +7 *** *** ** **", "error");
+            return;
+        }
+
+        fetch(`/api/user-profile/update/${userId}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ details: updatedDetails })
+        })
+        .then(response => {
+            if (response.ok) {
+                showNotification("Details updated successfully!", "success");
+            } else {
+                showNotification("Failed to update details!", "error");
+            }
+        })
+        .catch(error => console.error('Error updating details:', error));
     });
 
     function addPaymentToHistory(payment) {
@@ -98,7 +128,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 throw new Error('Failed to top up balance!');
             }
 
-            alert('Balance topped up successfully');
+            showNotification("Balance topped up successfully!", "success");
 
             // Динамическое обновление профиля и истории платежей
             loadProfile(); // Обновляем профиль
