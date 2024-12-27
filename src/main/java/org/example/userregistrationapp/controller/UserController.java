@@ -54,7 +54,7 @@ public class UserController {
         User savedUser = userRepository.save(user);
 
         // Создание профиля пользователя
-        UserProfile userProfile = new UserProfile(savedUser, BigDecimal.ZERO, "Default profile");
+        UserProfile userProfile = new UserProfile(savedUser, BigDecimal.ZERO, "No number");
         userProfileRepository.save(userProfile);
 
         return ResponseEntity.ok(savedUser);

@@ -169,13 +169,15 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Загрузка методов оплаты
+    // Загрузка методов оплаты, привязанных к пользователю
     function loadPaymentMethods() {
-        fetch('/api/payment-methods') // Запрос методов оплаты с сервера
+        const userId = sessionStorage.getItem('userId'); // ID пользователя
+
+        fetch(`/api/payment-methods/user/${userId}`) // Запрос привязанных методов
             .then(response => response.json())
             .then(methods => {
                 const select = document.getElementById('payment-method'); // Выпадающий список
-                select.innerHTML = ''; // Очищаем старые данные
+                select.innerHTML = ''; // Очистка данных
 
                 if (methods.length === 0) {
                     const option = document.createElement('option');
@@ -186,8 +188,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 methods.forEach(method => {
                     const option = document.createElement('option');
-                    option.value = method.id; // Значение — ID метода
-                    option.textContent = `${method.id} - ${method.name}`; // Текст — ID и название
+                    option.value = method.id; // Устанавливаем ID в качестве значения
+                    option.textContent = `${method.id} - ${method.name}`; // ID и имя в списке
                     select.appendChild(option);
                 });
             })
