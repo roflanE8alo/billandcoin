@@ -63,13 +63,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Обновление загрузки методов с кнопкой удаления
     function loadPaymentMethods() {
-        const userId = sessionStorage.getItem('userId');
+        const userId = sessionStorage.getItem('userId'); // Получаем ID пользователя
 
         fetch(`/api/payment-methods/user/${userId}`)
             .then(response => response.json())
             .then(methods => {
                 const list = document.getElementById('methods-list');
-                list.innerHTML = '';
+                list.innerHTML = ''; // Очищаем список
 
                 if (methods.length === 0) {
                     list.innerHTML = '<li>No payment methods available</li>';
@@ -79,7 +79,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 methods.forEach(method => {
                     const li = document.createElement('li');
                     li.innerHTML = `
-                        ${method.name} - ${method.description}
+                        ID: ${method.id} - ${method.name} - ${method.description}
                         <button onclick="deletePaymentMethod(${method.id})">Delete</button>
                     `;
                     list.appendChild(li);
@@ -91,14 +91,35 @@ document.addEventListener('DOMContentLoaded', () => {
             });
     }
 
-    // Добавление нового метода оплаты (фиктивная реализация)
+    // Добавление нового метода оплаты с проверкой
     document.getElementById('add-method-btn').addEventListener('click', () => {
-        const methodName = document.getElementById('new-method-name').value;
+        const methodName = document.getElementById('new-method-select').value;
         const methodDesc = document.getElementById('new-method-desc').value;
 
-        console.log('New method added:', methodName, methodDesc);
-        alert(`Payment method '${methodName}' added successfully`);
-        loadPaymentMethods(); // Перезагрузка списка
+        // Проверка формата карты: **** **** **** **** **/** ***
+        const cardRegex = /^\d{4} \d{4} \d{4} \d{4} (0[1-9]|1[0-2])\/\d{2} \d{3}$/;
+
+        if (!cardRegex.test(methodDesc)) {
+            showNotification("Invalid card format! Use **** **** **** **** MM/YY CVV", "error");
+            return;
+        }
+
+        const userId = sessionStorage.getItem('userId'); // ID пользователя
+
+        fetch(`/api/payment-methods/user/${userId}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name: methodName, description: methodDesc })
+        })
+        .then(response => response.json())
+        .then(data => {
+            showNotification("Payment method added successfully!", "success");
+            loadPaymentMethods(); // Перезагрузка списка
+        })
+        .catch(error => {
+            console.error('Error adding payment method:', error);
+            showNotification('Failed to add payment method!', "error");
+        });
     });
 
     // Выбор метода оплаты для подписки
@@ -106,6 +127,11 @@ document.addEventListener('DOMContentLoaded', () => {
         alert(`Payment method ${methodId} selected!`);
         window.location.href = 'user.html';
     }
+
+    // Кнопка возврата на страницу user.html
+    document.getElementById('back-to-user-btn').addEventListener('click', () => {
+        window.location.href = 'user.html'; // Переход на страницу пользователя
+    });
 
     // Инициализация
     loadPaymentMethods();

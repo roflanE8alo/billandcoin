@@ -95,3 +95,20 @@ button:hover {
     border: 1px solid #ccc; /* Добавляем границу */
     border-radius: 4px; /* Скругляем углы */
 }
+
+.back-btn {
+    width: auto; /* Автоматическая ширина по содержимому */
+    padding: 8px 15px;
+    font-size: 14px;
+    background-color: #007BFF;
+    color: white;
+    border: none;
+    cursor: pointer;
+    border-radius: 4px;
+    transition: 0.3s;
+    margin-bottom: 15px; /* Добавляем отступ снизу */
+}
+
+.back-btn:hover {
+    background-color: #0056b3;
+}

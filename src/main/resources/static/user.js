@@ -171,15 +171,23 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Загрузка методов оплаты
     function loadPaymentMethods() {
-        fetch('/api/payment-methods') // Новый эндпоинт на сервере
+        fetch('/api/payment-methods') // Запрос методов оплаты с сервера
             .then(response => response.json())
             .then(methods => {
-                const select = document.getElementById('payment-method');
-                select.innerHTML = ''; // Очистка старых данных
+                const select = document.getElementById('payment-method'); // Выпадающий список
+                select.innerHTML = ''; // Очищаем старые данные
+
+                if (methods.length === 0) {
+                    const option = document.createElement('option');
+                    option.textContent = 'No payment methods available';
+                    select.appendChild(option);
+                    return;
+                }
+
                 methods.forEach(method => {
                     const option = document.createElement('option');
-                    option.value = method.id;
-                    option.textContent = method.name;
+                    option.value = method.id; // Значение — ID метода
+                    option.textContent = `${method.id} - ${method.name}`; // Текст — ID и название
                     select.appendChild(option);
                 });
             })
