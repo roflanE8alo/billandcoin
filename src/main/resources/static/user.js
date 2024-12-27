@@ -147,26 +147,95 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Загрузка тарифов
     function loadTariffs() {
-        console.log('Loading tariffs...');
-        const tariffs = [
-            { id: 2, name: 'Standard', price: 10.00 },
-            { id: 3, name: 'Premium', price: 20.00 },
-            { id: 4, name: 'Gold', price: 30.00 }
-        ];
-        const list = document.getElementById('tariffs-list');
-        list.innerHTML = '';
-        tariffs.forEach(tariff => {
-            const li = document.createElement('li');
-            li.textContent = `ID: ${tariff.id} - ${tariff.name} - $${tariff.price}`;
-            const button = document.createElement('button');
-            button.textContent = 'Subscribe';
-            button.addEventListener('click', () => {
-                sessionStorage.setItem('selectedTariffId', tariff.id);
-                window.location.href = 'payment-methods.html';
-            });
-            li.appendChild(button);
-            list.appendChild(li);
-        });
+        const userId = sessionStorage.getItem('userId'); // Получаем ID пользователя
+
+        fetch('/api/user-profile/' + userId) // Проверяем профиль пользователя
+            .then(response => response.json())
+            .then(profile => {
+                const details = profile.details;
+
+                // Если в профиле указано "No number", блокируем подписку
+                if (details === 'No number') {
+                    showNotification('Add your phone number to subscribe!', 'error');
+                }
+
+                fetch('/api/tariffs') // Загружаем тарифы
+                    .then(response => response.json())
+                    .then(tariffs => {
+                        const list = document.getElementById('tariffs-list');
+                        list.innerHTML = '';
+
+                        tariffs.forEach(tariff => {
+                            const li = document.createElement('li');
+                            li.textContent = `${tariff.name} - $${tariff.price}`;
+
+                            const button = document.createElement('button');
+                            button.textContent = 'Subscribe';
+
+                            fetch(`/api/tariffs/active/${userId}`) // Проверка подписки
+                                .then(response => {
+                                    if (response.status === 204 || response.headers.get("content-length") === "0") {
+                                        return null; // Нет активной подписки
+                                    }
+                                    return response.json(); // Преобразуем в JSON
+                                })
+                                .then(activeTariff => {
+                                    // Если активная подписка уже есть
+                                    if (activeTariff) {
+                                        if (activeTariff.id === tariff.id) {
+                                            button.textContent = 'Contact support to unsubscribe';
+                                            button.disabled = true; // Блокируем кнопку
+                                        } else {
+                                            button.disabled = true; // Блокируем все остальные тарифы
+                                        }
+                                    }
+
+                                    // Если у пользователя "No number", блокируем все кнопки
+                                    if (details === 'No number') {
+                                        button.disabled = true;
+                                    } else {
+                                        // Добавляем обработчик только если кнопка активна
+                                        if (!button.disabled) {
+                                            button.addEventListener('click', () =>
+                                                subscribeTariff(userId, tariff.id, tariff.price));
+                                        }
+                                    }
+                                })
+                                .catch(error => console.error('Error checking active tariff:', error));
+
+                            li.appendChild(button);
+                            list.appendChild(li);
+                        });
+                    })
+                    .catch(error => console.error('Error loading tariffs:', error));
+            })
+            .catch(error => console.error('Error loading profile:', error));
+    }
+
+    // Подписка на тарифы
+    function subscribeTariff(userId, tariffId, price) {
+        fetch(`/api/user-profile/${userId}`) // Проверяем баланс
+            .then(response => response.json())
+            .then(profile => {
+                if (profile.details === 'No number') {
+                    showNotification('Add your phone number to subscribe!', 'error');
+                    return; // Блокируем подписку
+                }
+
+                if (profile.balance < price) {
+                    showNotification('Insufficient balance!', 'error');
+                    return;
+                }
+
+                fetch(`/api/tariffs/assign/${userId}/${tariffId}`, { method: 'POST' }) // Подписываемся
+                    .then(() => {
+                        showNotification('Subscribed successfully!', 'success');
+                        loadProfile();  // Обновляем профиль
+                        loadTariffs();  // Обновляем список тарифов (блокируем кнопки)
+                    })
+                    .catch(error => console.error('Error subscribing:', error));
+            })
+            .catch(error => console.error('Error checking profile:', error));
     }
 
     // Загрузка методов оплаты, привязанных к пользователю

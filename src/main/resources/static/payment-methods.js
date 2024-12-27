@@ -97,7 +97,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const methodDesc = document.getElementById('new-method-desc').value;
 
         // Проверка формата карты: **** **** **** **** **/** ***
-        const cardRegex = /^\d{4} \d{4} \d{4} \d{4} (0[1-9]|1[0-2])\/\d{2} \d{3}$/;
+        const cardRegex = /^\d{4} \d{4} \d{4} \d{4} (0[1-9]|1[0-2])\/(2[5-9]|[3-9]\d) \d{3}$/;
 
         if (!cardRegex.test(methodDesc)) {
             showNotification("Invalid card format! Use **** **** **** **** MM/YY CVV", "error");

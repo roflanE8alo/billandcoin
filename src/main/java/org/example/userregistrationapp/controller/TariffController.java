@@ -2,11 +2,14 @@ package org.example.userregistrationapp.controller;
 
 import org.example.userregistrationapp.model.Tariff;
 import org.example.userregistrationapp.model.User;
+import org.example.userregistrationapp.model.UserProfile;
 import org.example.userregistrationapp.model.UserTariff;
 import org.example.userregistrationapp.repository.TariffRepository;
+import org.example.userregistrationapp.repository.UserProfileRepository;
 import org.example.userregistrationapp.repository.UserRepository;
 import org.example.userregistrationapp.repository.UserTariffRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
@@ -22,6 +25,9 @@ public class TariffController {
 
     @Autowired
     private UserRepository userRepository;
+
+    @Autowired
+    private UserProfileRepository userProfileRepository;
 
     @Autowired
     private UserTariffRepository userTariffRepository;
@@ -40,17 +46,12 @@ public class TariffController {
 
     // Получить тариф по id
     @GetMapping("/active/{userId}")
-    public Tariff getActiveTariff(@PathVariable Long userId) {
-        // Поиск активного тарифа по ID пользователя
+    public ResponseEntity<?> getActiveTariff(@PathVariable Long userId) {
         List<UserTariff> userTariffs = userTariffRepository.findByUserId(userId);
-
-        // Проверка наличия тарифа
         if (userTariffs.isEmpty()) {
-            throw new RuntimeException("No active tariff found for user");
+            return ResponseEntity.noContent().build(); // Возвращаем HTTP 204
         }
-
-        // Возвращаем последний назначенный тариф
-        return userTariffs.get(userTariffs.size() - 1).getTariff();
+        return ResponseEntity.ok(userTariffs.get(userTariffs.size() - 1).getTariff());
     }
 
     // Добавить новый тариф
@@ -64,19 +65,31 @@ public class TariffController {
 
     // Привязать тариф к пользователю
     @PostMapping("/assign/{userId}/{tariffId}")
-    public String assignTariff(@PathVariable Long userId, @PathVariable Long tariffId) {
+    public ResponseEntity<?> assignTariff(@PathVariable Long userId, @PathVariable Long tariffId) {
         Optional<User> userOpt = userRepository.findById(userId);
         Optional<Tariff> tariffOpt = tariffRepository.findById(tariffId);
 
         if (userOpt.isPresent() && tariffOpt.isPresent()) {
             User user = userOpt.get();
             Tariff tariff = tariffOpt.get();
+            UserProfile profile = userProfileRepository.findByUserId(userId);
 
+            // Проверка баланса пользователя
+            if (profile.getBalance().compareTo(tariff.getPrice()) < 0) {
+                return ResponseEntity.badRequest().body("Insufficient balance");
+            }
+
+            // Списание средств с баланса
+            profile.setBalance(profile.getBalance().subtract(tariff.getPrice()));
+            userProfileRepository.save(profile);
+
+            // Привязка тарифа к пользователю
             UserTariff userTariff = new UserTariff(user, tariff, LocalDateTime.now());
             userTariffRepository.save(userTariff);
-            return "Tariff assigned successfully";
+
+            return ResponseEntity.ok("Tariff assigned successfully");
         }
-        return "User or Tariff not found";
+        return ResponseEntity.badRequest().body("User or Tariff not found");
     }
 
     // Активация или деактивация тарифа
