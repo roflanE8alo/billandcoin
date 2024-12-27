@@ -13,7 +13,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @RestController
@@ -90,6 +92,30 @@ public class TariffController {
             return ResponseEntity.ok("Tariff assigned successfully");
         }
         return ResponseEntity.badRequest().body("User or Tariff not found");
+    }
+
+    @GetMapping("/user/{userId}/active-tariff")
+    public ResponseEntity<?> getUserActiveTariff(@PathVariable Long userId) {
+        List<UserTariff> userTariffs = userTariffRepository.findByUserId(userId); // Получаем тарифы пользователя&#8203;:contentReference[oaicite:0]{index=0}
+
+        if (userTariffs.isEmpty()) {
+            return ResponseEntity.badRequest().body("No active tariff found for user");
+        }
+
+        UserTariff latestTariff = userTariffs.get(userTariffs.size() - 1); // Последний тариф
+        Tariff tariff = latestTariff.getTariff(); // Получаем тариф&#8203;:contentReference[oaicite:1]{index=1}
+
+        // Рассчитываем следующую дату списания
+        LocalDateTime nextPaymentDate = latestTariff.getAssignedAt().plusMonths(1); // Через месяц
+
+        // Возвращаем данные в JSON
+        Map<String, Object> response = new HashMap<>();
+        response.put("id", tariff.getId());
+        response.put("name", tariff.getName());
+        response.put("price", tariff.getPrice());
+        response.put("nextPaymentDate", nextPaymentDate.toLocalDate());
+
+        return ResponseEntity.ok(response);
     }
 
     // Активация или деактивация тарифа

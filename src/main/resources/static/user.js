@@ -238,6 +238,32 @@ document.addEventListener('DOMContentLoaded', () => {
             .catch(error => console.error('Error checking profile:', error));
     }
 
+    function loadActiveTariff() {
+        const userId = sessionStorage.getItem('userId'); // ID пользователя
+
+        fetch(`/api/tariffs/user/${userId}/active-tariff`) // Запрос активного тарифа
+            .then(response => {
+                if (!response.ok) {
+                    throw new showNotification('No active tariff found.', 'error');// Если нет тарифа
+                }
+                return response.json();
+            })
+            .then(tariff => {
+                const list = document.getElementById('active-tariff-list');
+                list.innerHTML = ''; // Очищаем старый список
+
+                const li = document.createElement('li');
+                li.textContent = `${tariff.name} - $${tariff.price} - Next payment: ${tariff.nextPaymentDate}`;
+                list.appendChild(li); // Добавляем в список
+            })
+            .catch(error => {
+                console.error('Error loading active tariff:', error);
+                const list = document.getElementById('active-tariff-list');
+                list.innerHTML = '<li>No active tariff</li>'; // Если нет тарифа
+            });
+    }
+
+
     // Загрузка методов оплаты, привязанных к пользователю
     function loadPaymentMethods() {
         const userId = sessionStorage.getItem('userId'); // ID пользователя
@@ -300,4 +326,5 @@ document.addEventListener('DOMContentLoaded', () => {
     loadTariffs();
     loadPaymentMethods();
     loadPayments();
+    loadActiveTariff();
 });
